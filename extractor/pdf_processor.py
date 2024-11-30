@@ -1,18 +1,15 @@
-
-import pdfplumber
 from collections import defaultdict
 import matplotlib.pyplot as plt
+from extractor.pdf_reader import PDFReader
+import pdfplumber
 
 class PDFProcessor:
     def __init__(self):
-        self.pdf_path = None
+        self.reader = PDFReader()
         self.column_layout = {}
 
-    def load_pdf(self):
-        from tkinter import filedialog
-        self.pdf_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
-        if not self.pdf_path:
-            raise ValueError("Keine PDF-Datei ausgewählt.")
+    def set_pdf(self, pdf_path):
+        self.reader.load_pdf(pdf_path)
 
     def add_column(self, column_name, x_min, x_max):
         try:
@@ -26,7 +23,7 @@ class PDFProcessor:
             raise ValueError("Bitte geben Sie gültige X-Koordinaten ein.") from e
 
     def extract_data(self, page_from, page_to, y_min, y_max):
-        if not self.pdf_path:
+        if not self.reader.pdf_path:
             raise ValueError("Keine PDF-Datei geladen.")
         if not self.column_layout:
             raise ValueError("Keine Spaltenkoordinaten definiert.")
@@ -43,12 +40,10 @@ class PDFProcessor:
             raise ValueError("Ungültiger Seitenbereich.")
 
         extracted_data = []
-        with pdfplumber.open(self.pdf_path) as pdf:
-            for page_num in range(page_from - 1, page_to):
-                page = pdf.pages[page_num]
-                words = page.extract_words()
-                rows = self._group_words_by_rows(words, y_min, y_max)
-                extracted_data.extend(self._map_words_to_columns(rows))
+        for page_num in range(page_from, page_to + 1):
+            words = self.reader.extract_words(page_num)
+            rows = self._group_words_by_rows(words, y_min, y_max)
+            extracted_data.extend(self._map_words_to_columns(rows))
         return extracted_data
 
     def _group_words_by_rows(self, words, y_min, y_max, tolerance=5):
@@ -81,19 +76,12 @@ class PDFProcessor:
         return mapped_data
 
     def show_coordinates(self, page_number):
-        if not self.pdf_path:
+        if not self.reader.pdf_path:
             raise ValueError("Keine PDF-Datei geladen.")
-        try:
-            page_number = int(page_number)
-        except ValueError:
-            raise ValueError("Ungültige Seitenzahl.")
-
-        with pdfplumber.open(self.pdf_path) as pdf:
-            if page_number < 1 or page_number > len(pdf.pages):
-                raise ValueError("Die Seitenzahl liegt außerhalb des Bereichs der PDF.")
+        words = self.reader.extract_words(page_number)
+        with pdfplumber.open(self.reader.pdf_path) as pdf:
             page = pdf.pages[page_number - 1]
             im = page.to_image()
-            words = page.extract_words()
 
             fig, ax = plt.subplots()
             im.debug_tablefinder()
@@ -119,4 +107,3 @@ class PDFProcessor:
             plt.imshow(im.original, alpha=0.7)
             plt.title("Koordinatenhilfe")
             plt.show()
-

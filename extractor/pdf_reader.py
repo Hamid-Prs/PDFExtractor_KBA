@@ -1,4 +1,3 @@
-
 import pdfplumber
 
 class PDFReader:
@@ -8,10 +7,16 @@ class PDFReader:
     def load_pdf(self, path):
         self.pdf_path = path
 
-    def extract_data(self):
+    def extract_words(self, page_number):
         if not self.pdf_path:
-            raise ValueError("Kein PDF geladen!")
-        
+            raise ValueError("Keine PDF-Datei geladen.")
         with pdfplumber.open(self.pdf_path) as pdf:
-            data = [page.extract_text() for page in pdf.pages]
-        return data
+            if page_number < 1 or page_number > len(pdf.pages):
+                raise ValueError("Ungültige Seitenzahl.")
+            return pdf.pages[page_number - 1].extract_words()
+
+    def get_metadata(self):
+        if not self.pdf_path:
+            raise ValueError("Keine PDF-Datei geladen.")
+        with pdfplumber.open(self.pdf_path) as pdf:
+            return pdf.metadata

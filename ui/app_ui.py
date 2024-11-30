@@ -99,7 +99,11 @@ class PDFExtractorAppTk:
 
     def load_pdf(self):
         try:
-            self.pdf_processor.load_pdf()
+            pdf_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+            if not pdf_path:
+                raise ValueError("Keine PDF-Datei ausgewählt.")
+            # Nutzung des konsistenten Attributnamens `pdf_processor`
+            self.pdf_processor.set_pdf(pdf_path)
             messagebox.showinfo("Info", "PDF erfolgreich geladen!")
         except ValueError as e:
             messagebox.showwarning("Warnung", str(e))
