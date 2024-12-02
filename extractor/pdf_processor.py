@@ -9,9 +9,11 @@ class PDFProcessor:
         self.column_layout = {}
 
     def set_pdf(self, pdf_path):
+        """Setzt den Pfad der PDF-Datei."""
         self.reader.load_pdf(pdf_path)
 
     def add_column(self, column_name, x_min, x_max):
+        """Fügt eine Spalte mit X-Koordinaten hinzu."""
         try:
             x_min = float(x_min)
             x_max = float(x_max)
@@ -19,23 +21,20 @@ class PDFProcessor:
                 self.column_layout[column_name] = (x_min, x_max)
             else:
                 raise ValueError("Ungültige Spaltenkoordinaten.")
-        except ValueError as e:
-            raise ValueError("Bitte geben Sie gültige X-Koordinaten ein.") from e
+        except ValueError:
+            raise ValueError("Bitte geben Sie gültige X-Koordinaten ein.")
 
     def extract_data(self, page_from, page_to, y_min, y_max):
+        """Extrahiert Daten basierend auf Seiten- und Koordinatenbereichen."""
         if not self.reader.pdf_path:
             raise ValueError("Keine PDF-Datei geladen.")
         if not self.column_layout:
             raise ValueError("Keine Spaltenkoordinaten definiert.")
-
         try:
-            page_from = int(page_from)
-            page_to = int(page_to)
-            y_min = float(y_min)
-            y_max = float(y_max)
-        except ValueError as e:
-            raise ValueError("Bitte geben Sie gültige Seitenbereich ein.") from e
-
+            page_from, page_to = int(page_from), int(page_to)
+            y_min, y_max = float(y_min), float(y_max)
+        except ValueError:
+            raise ValueError("Bitte geben Sie gültige Seitennummer ein.")
         if page_from < 1 or page_to < page_from:
             raise ValueError("Ungültiger Seitenbereich.")
 
@@ -47,6 +46,7 @@ class PDFProcessor:
         return extracted_data
 
     def _group_words_by_rows(self, words, y_min, y_max, tolerance=5):
+        """Gruppiert Wörter basierend auf ihren Y-Koordinaten."""
         rows = defaultdict(list)
         for word in words:
             y0, y1 = word['top'], word['bottom']
@@ -61,6 +61,7 @@ class PDFProcessor:
         return rows
 
     def _map_words_to_columns(self, rows):
+        """Ordnet Wörter den Spalten basierend auf X-Koordinaten zu."""
         mapped_data = []
         for _, row in sorted(rows.items()):
             row_data = {col: "NA" for col in self.column_layout}
@@ -68,14 +69,12 @@ class PDFProcessor:
                 x_center = (word['x0'] + word['x1']) / 2
                 for col_name, (x_min, x_max) in self.column_layout.items():
                     if x_min <= x_center <= x_max:
-                        if row_data[col_name] == "NA":
-                            row_data[col_name] = word['text']
-                        else:
-                            row_data[col_name] += f" {word['text']}"
+                        row_data[col_name] = f"{row_data[col_name]} {word['text']}".strip("NA ")
             mapped_data.append(row_data)
         return mapped_data
 
     def show_coordinates(self, page_number):
+        """Visualisiert Wörter und Koordinaten auf einer Seite."""
         if not self.reader.pdf_path:
             raise ValueError("Keine PDF-Datei geladen.")
         words = self.reader.extract_words(page_number)
