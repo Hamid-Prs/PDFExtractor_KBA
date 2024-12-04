@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from extractor.pdf_processor import PDFProcessor
 from utils.layout_manager import LayoutManager
-from utils.file_manager import save_as_csv, save_as_json
+from utils.file_manager import FileManager
 
 
 class PDFExtractorAppTk:
@@ -151,10 +151,10 @@ class PDFExtractorAppTk:
             messagebox.showerror("Fehler", f"Fehler bei der Datenextraktion: {e}")
 
     def export_data_csv(self):
-        save_as_csv(self.extracted_data)
+        FileManager.save_as_csv(self.extracted_data)
 
     def export_data_json(self):
-        save_as_json(self.extracted_data)
+        FileManager.save_as_json(self.extracted_data)
 
     def show_coordinates(self):
         try:
