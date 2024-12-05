@@ -7,7 +7,7 @@ import pdfplumber
 # Logging-Konfiguration
 logging.basicConfig(
     filename="app.log",
-    level=logging.DEBUG,
+    level=logging.WARNING,  # Reduzierung der Log
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
@@ -15,12 +15,10 @@ class PDFProcessor:
     def __init__(self):
         self.reader = PDFReader()
         self.column_layout = {}
-        logging.info("PDF-Verarbeitung initialisiert.")
 
     def set_pdf(self, pdf_path):
         """Setzt den Pfad der PDF-Datei."""
         self.reader.load_pdf(pdf_path)
-        logging.info(f"PDF-Datei gesetzt: {pdf_path}")
 
     def add_column(self, column_name, x_min, x_max):
         """Fügt eine Spalte mit X-Koordinaten hinzu."""
@@ -29,7 +27,6 @@ class PDFProcessor:
             x_max = float(x_max)
             if column_name and x_min < x_max:
                 self.column_layout[column_name] = (x_min, x_max)
-                logging.info(f"Spalte hinzugefügt: {column_name}, X-Min: {x_min}, X-Max: {x_max}")
             else:
                 raise ValueError("Ungültige Spaltenkoordinaten.")
         except ValueError as e:
@@ -54,13 +51,11 @@ class PDFProcessor:
             logging.error("Ungültiger Seitenbereich.")
             raise ValueError("Ungültiger Seitenbereich.")
 
-        logging.info(f"Extrahiere Daten von Seite {page_from} bis {page_to}.")
         extracted_data = []
         for page_num in range(page_from, page_to + 1):
             words = self.reader.extract_words(page_num)
             rows = self._group_words_by_rows(words, y_min, y_max)
             extracted_data.extend(self._map_words_to_columns(rows))
-        logging.info("Datenextraktion abgeschlossen.")
         return extracted_data
 
     def _group_words_by_rows(self, words, y_min, y_max, tolerance=5):
@@ -76,7 +71,6 @@ class PDFProcessor:
                         break
                 else:
                     rows[y_center].append(word)
-        logging.info(f"{len(rows)} Zeilen basierend auf Y-Koordinaten gruppiert.")
         return rows
 
     def _map_words_to_columns(self, rows):
@@ -93,9 +87,6 @@ class PDFProcessor:
                         else:
                             row_data[col_name] += f" {word['text']}"
             mapped_data.append(row_data)
-        
-        # Logging für Mapping-Ergebnis 
-        logging.info(f"{len(mapped_data)} Zeilen erfolgreich den Spalten zugeordnet.")
         return mapped_data
 
     def show_coordinates(self, page_number):

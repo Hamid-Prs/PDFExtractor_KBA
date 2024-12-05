@@ -5,33 +5,25 @@ import logging
 # Logging konfigurieren
 logging.basicConfig(
     filename="app.log",
-    level=logging.DEBUG,
+    level=logging.WARNING,  # Reduziert die Menge der Logs
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 class LayoutManager:
     def save_layout(self, column_layout, y_min, y_max):
         """Speichert das Layout in einer JSON-Datei."""
-        if not column_layout:
-            logging.warning("Speichern des Layouts fehlgeschlagen: Keine Spaltenkoordinaten definiert.")
-            messagebox.showwarning("Warnung", "Keine Spaltenkoordinaten definiert.")
-            return
-        if not y_min or not y_max:
-            logging.warning("Speichern des Layouts fehlgeschlagen: Y-Bereiche müssen definiert sein.")
-            messagebox.showwarning("Warnung", "Y-Bereiche müssen definiert sein.")
-            return
-
+        if y_min > y_max:
+            raise ValueError("Ungültige Y-Bereiche: y_min darf nicht größer als y_max sein.")
         try:
-            layout_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
-            if layout_path:
+            file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+            if file_path:
                 layout_data = {
                     "columns": column_layout,
                     "y_min": float(y_min),
                     "y_max": float(y_max)
                 }
-                with open(layout_path, 'w', encoding='utf-8') as file:
-                    json.dump(layout_data, file, indent=4)
-                logging.info(f"Layout erfolgreich gespeichert: {layout_path}")
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    json.dump(layout_data, file, indent=4, ensure_ascii=False)
                 messagebox.showinfo("Info", "Layout erfolgreich gespeichert.")
         except Exception as e:
             logging.error(f"Fehler beim Speichern des Layouts: {e}")
@@ -40,18 +32,16 @@ class LayoutManager:
     def load_layout(self):
         """Lädt ein Layout aus einer JSON-Datei."""
         try:
-            layout_path = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
-            if layout_path:
-                with open(layout_path, 'r', encoding='utf-8') as file:
+            file_path = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+            if file_path:
+                with open(file_path, 'r', encoding='utf-8') as file:
                     layout_data = json.load(file)
-                logging.info(f"Layout erfolgreich geladen: {layout_path}")
+                layout_data["y_min"] = float(layout_data["y_min"])
+                layout_data["y_max"] = float(layout_data["y_max"])
                 return layout_data
-        except FileNotFoundError:
-            logging.error("Datei nicht gefunden.")
-            messagebox.showerror("Fehler", "Datei nicht gefunden.")
         except json.JSONDecodeError:
             logging.error("Ungültige JSON-Datei.")
-            messagebox.showerror("Fehler", "Ungültige JSON-Datei.")
+            raise ValueError("Ungültige JSON-Datei.")
         except Exception as e:
             logging.error(f"Fehler beim Laden des Layouts: {e}")
             messagebox.showerror("Fehler", f"Fehler beim Laden des Layouts: {e}")

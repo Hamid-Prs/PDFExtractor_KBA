@@ -3,6 +3,14 @@ from tkinter import filedialog, messagebox
 from extractor.pdf_processor import PDFProcessor
 from utils.layout_manager import LayoutManager
 from utils.file_manager import FileManager
+import logging
+
+# Logging konfigurieren
+logging.basicConfig(
+    filename="app.log",
+    level=logging.WARNING,  
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 class PDFExtractorAppTk:
@@ -24,7 +32,7 @@ class PDFExtractorAppTk:
         # PDF-Datei auswählen
         self.btn_load_pdf = tk.Button(root, text="PDF Datei auswählen", command=self.load_pdf, width=25, height=2, **button_style)
         self.btn_load_pdf.pack(pady=20)
-
+        
         # Seitenbereich eingeben
         self.page_frame = tk.Frame(root, bg="#2c3e50")
         self.page_frame.pack(pady=10)
@@ -102,12 +110,13 @@ class PDFExtractorAppTk:
             pdf_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
             if not pdf_path:
                 raise ValueError("Keine PDF-Datei ausgewählt.")
-            # Nutzung des konsistenten Attributnamens `pdf_processor`
             self.pdf_processor.set_pdf(pdf_path)
             messagebox.showinfo("Info", "PDF erfolgreich geladen!")
         except ValueError as e:
+            logging.warning(f"Warnung beim Laden der PDF: {e}")
             messagebox.showwarning("Warnung", str(e))
         except Exception as e:
+            logging.error(f"Fehler beim Laden der PDF: {e}")
             messagebox.showerror("Fehler", f"Fehler beim Laden der PDF: {e}")
 
     def add_column(self):
@@ -146,22 +155,32 @@ class PDFExtractorAppTk:
             self.extracted_data = self.pdf_processor.extract_data(page_from, page_to, y_min, y_max)
             messagebox.showinfo("Info", "Daten erfolgreich extrahiert!")
         except ValueError as e:
+            logging.warning(f"Warnung bei der Datenextraktion: {e}")
             messagebox.showwarning("Warnung", str(e))
         except Exception as e:
+            logging.error(f"Fehler bei der Datenextraktion: {e}")
             messagebox.showerror("Fehler", f"Fehler bei der Datenextraktion: {e}")
 
     def export_data_csv(self):
-        FileManager.save_as_csv(self.extracted_data)
+        try:
+            FileManager.save_as_csv(self.extracted_data)
+        except Exception as e:
+            logging.error(f"Fehler beim Exportieren als CSV: {e}")
+            messagebox.showerror("Fehler", f"Fehler beim Exportieren als CSV: {e}")
 
     def export_data_json(self):
-        FileManager.save_as_json(self.extracted_data)
+        try:
+            FileManager.save_as_json(self.extracted_data)
+        except Exception as e:
+            logging.error(f"Fehler beim Exportieren als JSON: {e}")
+            messagebox.showerror("Fehler", f"Fehler beim Exportieren als JSON: {e}")
 
     def show_coordinates(self):
         try:
             page_from = int(self.entry_page_from.get())  # Seitenzahl aus der GUI holen
             self.pdf_processor.show_coordinates(page_from)
         except ValueError:
-            messagebox.showwarning("Warnung", "Bitte eine gültige Seitenzahl eingeben.")
+            messagebox.showwarning("Warnung", "Bitte eine gültige Seitennummer eingeben.")
         except Exception as e:
             messagebox.showerror("Fehler", f"Fehler bei der Koordinatenanzeige: {e}")
 
