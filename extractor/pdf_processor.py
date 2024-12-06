@@ -19,6 +19,7 @@ class PDFProcessor:
     def set_pdf(self, pdf_path):
         """Setzt den Pfad der PDF-Datei."""
         self.reader.load_pdf(pdf_path)
+    
 
     def add_column(self, column_name, x_min, x_max):
         """Fügt eine Spalte mit X-Koordinaten hinzu."""
