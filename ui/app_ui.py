@@ -124,8 +124,16 @@ class PDFExtractorAppTk:
             pdf_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
             if not pdf_path:
                 raise ValueError("Keine PDF-Datei ausgewählt.")
+            
+            # PDF-Datei setzen
             self.pdf_processor.set_pdf(pdf_path)
-            messagebox.showinfo("Info", "PDF erfolgreich geladen!")
+            
+            # Anzahl der Seiten abrufen
+            total_pages = self.pdf_processor.get_total_pages()
+            
+            # Erfolgsmeldung
+            messagebox.showinfo("PDF geladen", f"Die PDF wurde erfolgreich geladen.\n"
+                                        f"Anzahl der Seiten: {total_pages}")
         except ValueError as e:
             logging.warning(f"Warnung beim Laden der PDF: {e}")
             messagebox.showwarning("Warnung", str(e))
@@ -162,19 +170,44 @@ class PDFExtractorAppTk:
 
     def extract_data(self):
         try:
-            page_from = self.entry_page_from.get()
-            page_to = self.entry_page_to.get()
-            y_min = self.entry_y_min.get()
-            y_max = self.entry_y_max.get()
+            # Validierung ob der Pdf-Datei geladen wurde
+            if not self.pdf_processor.reader.pdf_path:
+                raise ValueError("Bitte laden Sie zuerst eine PDF-Datei hoch.")
+
+            # 
+            page_from = int(self.entry_page_from.get().strip())
+            page_to = int(self.entry_page_to.get().strip())
+
+            # gib die Seitenanzahl der Pdf-Datei zurück
+            total_pages = self.pdf_processor.get_total_pages()
+
+            # Validierung der Seitenanzahl
+            if page_from < 1 or page_to > total_pages or page_from > page_to:
+                raise ValueError(f"Ungültiger Seitenbereich! Die PDF hat nur {total_pages} Seiten.")
+
+            # Valiedirung der geladenen Layout
+            if not self.layout_manager.is_layout_loaded():
+                raise ValueError("Bitte laden oder erstellen Sie zuerst ein Layout.")
+            
+            # Validierung der Y-Koordinaten der PDF-Seite
+            valid_y_min, valid_y_max = self.pdf_processor.get_valid_y_range()
+            y_min = float(self.entry_y_min.get().strip())
+            y_max = float(self.entry_y_max.get().strip())
+            if y_min < valid_y_min or y_max > valid_y_max or y_min >= y_max:
+                raise ValueError(f"Ungültige Y-Bereiche! Gültiger Bereich ist: {valid_y_min} bis {valid_y_max}.")
+
+            # Daten Extraktion aus der PDF
             self.extracted_data = self.pdf_processor.extract_data(page_from, page_to, y_min, y_max)
-            self.update_preview()  # Aktualisiert die Vorschau der Daten
+            self.update_preview()
             messagebox.showinfo("Info", "Daten erfolgreich extrahiert!")
+
         except ValueError as e:
             logging.warning(f"Warnung bei der Datenextraktion: {e}")
             messagebox.showwarning("Warnung", str(e))
         except Exception as e:
             logging.error(f"Fehler bei der Datenextraktion: {e}")
             messagebox.showerror("Fehler", f"Fehler bei der Datenextraktion: {e}")
+
 
     def export_data_csv(self):
         try:

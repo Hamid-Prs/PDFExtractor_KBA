@@ -40,3 +40,15 @@ class PDFReader:
         except Exception as e:
             logging.error(f"Fehler beim Extrahieren von Wörtern: {e}")
             raise RuntimeError(f"Fehler beim Extrahieren von Wörtern: {e}")
+    
+    def get_total_pages(self):
+        """Gibt die Gesamtanzahl der Seiten der PDF-Datei zurück."""
+        if not self.pdf_path:
+            logging.error("Keine PDF-Datei geladen.")
+            raise ValueError("Keine PDF-Datei geladen.")
+        try:
+            with pdfplumber.open(self.pdf_path) as pdf:
+                return len(pdf.pages)
+        except Exception as e:
+            logging.error(f"Fehler beim Abrufen der Seitenanzahl: {e}")
+            raise RuntimeError(f"Fehler beim Abrufen der Seitenanzahl: {e}")

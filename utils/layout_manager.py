@@ -10,6 +10,9 @@ logging.basicConfig(
 )
 
 class LayoutManager:
+    def __init__(self):
+        self.current_layout = None  
+        
     def save_layout(self, column_layout, y_min, y_max):
         """Speichert das Layout in einer JSON-Datei."""
         if y_min > y_max:
@@ -24,6 +27,7 @@ class LayoutManager:
                 }
                 with open(file_path, 'w', encoding='utf-8') as file:
                     json.dump(layout_data, file, indent=4, ensure_ascii=False)
+                self.current_layout = layout_data  # ذخیره Layout
                 messagebox.showinfo("Info", "Layout erfolgreich gespeichert.")
         except Exception as e:
             logging.error(f"Fehler beim Speichern des Layouts: {e}")
@@ -38,6 +42,7 @@ class LayoutManager:
                     layout_data = json.load(file)
                 layout_data["y_min"] = float(layout_data["y_min"])
                 layout_data["y_max"] = float(layout_data["y_max"])
+                self.current_layout = layout_data  # ذخیره Layout
                 return layout_data
         except json.JSONDecodeError:
             logging.error("Ungültige JSON-Datei.")
@@ -45,3 +50,7 @@ class LayoutManager:
         except Exception as e:
             logging.error(f"Fehler beim Laden des Layouts: {e}")
             messagebox.showerror("Fehler", f"Fehler beim Laden des Layouts: {e}")
+
+    def is_layout_loaded(self):
+        """Überprüft, ob ein Layout geladen wurde."""
+        return self.current_layout is not None

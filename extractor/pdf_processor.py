@@ -20,6 +20,9 @@ class PDFProcessor:
         """Setzt den Pfad der PDF-Datei."""
         self.reader.load_pdf(pdf_path)
     
+    def get_total_pages(self):
+        """Gibt die Gesamtanzahl der Seiten der geladenen PDF zurück."""
+        return self.reader.get_total_pages()
 
     def add_column(self, column_name, x_min, x_max):
         """Fügt eine Spalte mit X-Koordinaten hinzu."""
@@ -125,3 +128,16 @@ class PDFProcessor:
             plt.title("Koordinatenhilfe")
             plt.show()
         logging.info(f"Koordinatenhilfe für Seite {page_number} angezeigt.")
+
+    def get_valid_y_range(self):
+        """Gibt den gültigen Y-Bereich der PDF zurück."""
+        if not self.reader.pdf_path:
+            raise ValueError("Keine PDF-Datei geladen.")
+
+        try:
+            with pdfplumber.open(self.reader.pdf_path) as pdf:
+                page = pdf.pages[0]  # فرض می‌کنیم مختصات برای همه صفحات یکسان است
+                bounds = page.bbox  # مختصات صفحه: (x0, y0, x1, y1)
+                return bounds[1], bounds[3]  # y_min, y_max
+        except Exception as e:
+            raise RuntimeError(f"Fehler beim Abrufen des gültigen Y-Bereichs: {e}")
