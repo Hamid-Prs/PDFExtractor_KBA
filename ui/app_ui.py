@@ -16,7 +16,7 @@ logging.basicConfig(
 class PDFExtractorAppTk:
     def __init__(self, root):
         self.root = root
-        self.root.title("PDF Datenextraktor")
+        self.root.title("PDFExtractor")
         self.root.geometry("1000x800")
         self.root.configure(bg="#2c3e50")
 
@@ -39,7 +39,8 @@ class PDFExtractorAppTk:
 
         self.btn_load_pdf = tk.Button(self.header_frame, text="PDF Datei auswählen", command=self.load_pdf, width=20, **button_style)
         self.btn_load_pdf.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-
+        
+        # Seiten-Koordinaten durch matplotlip bibliothek anzeigen 
         self.btn_show_coordinates = tk.Button(self.header_frame, text="Koordinatenhilfe anzeigen", command=self.show_coordinates, width=20, **button_style)
         self.btn_show_coordinates.grid(row=0, column=1, padx=10, pady=10, sticky="e")
 
@@ -96,18 +97,39 @@ class PDFExtractorAppTk:
         self.columns_listbox = tk.Listbox(self.content_frame, width=80, height=8)
         self.columns_listbox.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
 
+        # Button, um Daten zu Extrahieren(methode extract_data)
         self.btn_extract_data = tk.Button(self.content_frame, text="Daten extrahieren", command=self.extract_data, width=20, **button_style)
         self.btn_extract_data.grid(row=5, column=0, padx=10, pady=5, sticky="w")
+
         # Vorschau extrahierter Daten
-        self.data_preview = ttk.Treeview(self.content_frame, columns=(), show="headings")
-        self.data_preview.grid(row=6, column=0, padx=10, pady=10, sticky="nsew")
+        self.treeview_frame = tk.Frame(self.content_frame, bg="#2c3e50")
+        self.treeview_frame.grid(row=6, column=0, padx=10, pady=10, sticky="nsew")
+        # Treeview für Daten
+        self.data_preview = ttk.Treeview(self.treeview_frame, columns=(), show="headings", height=15)
+        self.data_preview.grid(row=0, column=0, sticky="nsew")
+        # Scrollbar Vertikal
+        self.v_scrollbar = tk.Scrollbar(self.treeview_frame, orient=tk.VERTICAL, command=self.data_preview.yview)
+        self.v_scrollbar.grid(row=0, column=1, sticky="ns")
+        # Scrollbar Horizontal
+        self.h_scrollbar = tk.Scrollbar(self.treeview_frame, orient=tk.HORIZONTAL, command=self.data_preview.xview)
+        self.h_scrollbar.grid(row=1, column=0, sticky="ew")
+        # Verbundung des Scrollbars zum Treeview
+        self.data_preview.configure(yscrollcommand=self.v_scrollbar.set, xscrollcommand=self.h_scrollbar.set)
+        # Grid-Einstellung für Treeview Frame
+        self.treeview_frame.grid_rowconfigure(0, weight=1)
+        self.treeview_frame.grid_columnconfigure(0, weight=1)
+
+        # Progressbar
+        self.progress = ttk.Progressbar(self.content_frame, orient="horizontal", length=300, mode="determinate")
+        self.progress.grid(row=7, column=0, padx=10, pady=5, sticky="ew")
+        # Label für ein Progressbar
+        self.progress_label = tk.Label(self.content_frame, text="Fortschritt: 0%", bg="#2c3e50", fg="white", font=("Helvetica", 10))
+        self.progress_label.grid(row=8, column=0, padx=10, pady=5, sticky="w")
 
         # Footer Frame
         self.footer_frame = tk.Frame(root, bg="#34495e")
         self.footer_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
         self.footer_frame.grid_columnconfigure(1, weight=1)
-
-        
 
         self.btn_export_csv = tk.Button(self.footer_frame, text="Daten als CSV exportieren", command=self.export_data_csv, width=20, **button_style)
         self.btn_export_csv.grid(row=0, column=1, padx=10, pady=10, sticky="w")
@@ -131,15 +153,28 @@ class PDFExtractorAppTk:
             # Anzahl der Seiten abrufen
             total_pages = self.pdf_processor.get_total_pages()
             
-            # Erfolgsmeldung
+            # bei neu laden anderer PDF-Datei wird das Löschen der Layout gefragt
+            if self.layout_manager.is_layout_loaded():
+                keep_layout = messagebox.askyesno(
+                    "Layout behalten?",
+                    "Möchten Sie das aktuelle Layout für die neue PDF behalten?"
+                )
+                if not keep_layout:
+                    self.clear_previews(clear_layout=True)
+                else:
+                    self.clear_previews(clear_layout=False)
+            else:
+                self.clear_previews(clear_layout=True)
+
             messagebox.showinfo("PDF geladen", f"Die PDF wurde erfolgreich geladen.\n"
-                                        f"Anzahl der Seiten: {total_pages}")
+                                            f"Anzahl der Seiten: {total_pages}")
         except ValueError as e:
             logging.warning(f"Warnung beim Laden der PDF: {e}")
             messagebox.showwarning("Warnung", str(e))
         except Exception as e:
             logging.error(f"Fehler beim Laden der PDF: {e}")
             messagebox.showerror("Fehler", f"Fehler beim Laden der PDF: {e}")
+
 
     def add_column(self):
         try:
@@ -170,13 +205,21 @@ class PDFExtractorAppTk:
 
     def extract_data(self):
         try:
-            # Validierung ob der Pdf-Datei geladen wurde
+            # Validierung ob der Pdf-Datei geladen
             if not self.pdf_processor.reader.pdf_path:
                 raise ValueError("Bitte laden Sie zuerst eine PDF-Datei hoch.")
 
-            # 
-            page_from = int(self.entry_page_from.get().strip())
-            page_to = int(self.entry_page_to.get().strip())
+            # Validierung der Seitennummer, ob von Seite und bis Seite ausgefüllt sind
+            if not self.entry_page_from.get().strip() or not self.entry_page_to.get().strip():
+                raise ValueError("Bitte geben Sie gültige Werte für 'Von Seite' und 'Bis Seite' ein.")
+
+            # Validierung der input Werte 'Von Seite' und 'Bis Seite'
+            page_from_input = self.entry_page_from.get().strip()
+            page_to_input = self.entry_page_to.get().strip()
+            if not page_from_input.isdigit() or not page_to_input.isdigit():
+                raise ValueError("Bitte geben Sie gültige Zahlen für 'Von Seite' und 'Bis Seite' ein.")
+            page_from = int(page_from_input)
+            page_to = int(page_to_input)
 
             # gib die Seitenanzahl der Pdf-Datei zurück
             total_pages = self.pdf_processor.get_total_pages()
@@ -190,14 +233,29 @@ class PDFExtractorAppTk:
                 raise ValueError("Bitte laden oder erstellen Sie zuerst ein Layout.")
             
             # Validierung der Y-Koordinaten der PDF-Seite
-            valid_y_min, valid_y_max = self.pdf_processor.get_valid_y_range()
+            valid_y_min, valid_y_max = self.pdf_processor.get_valid_y_range(page_from)
             y_min = float(self.entry_y_min.get().strip())
             y_max = float(self.entry_y_max.get().strip())
             if y_min < valid_y_min or y_max > valid_y_max or y_min >= y_max:
                 raise ValueError(f"Ungültige Y-Bereiche! Gültiger Bereich ist: {valid_y_min} bis {valid_y_max}.")
 
+            # Initialisierung des Fortschrittsbalken
+            total_pages_to_process = page_to - page_from + 1
+            self.progress["maximum"] = total_pages_to_process
+            self.progress["value"] = 0
+            self.progress_label.config(text="Fortschritt:   ")
+
+            # Extraktion mit Progressbar
+            self.extracted_data = []
+            for page in range(page_from, page_to + 1):
+                data = self.pdf_processor.extract_data(page, page, y_min, y_max)
+                self.extracted_data.extend(data)
+                self.progress["value"] += 1
+                progress_percentage = (self.progress["value"] / total_pages_to_process) * 100
+                self.progress_label.config(text=f"Fortschritt: {progress_percentage:.0f}%")
+                self.progress.update_idletasks()
             # Daten Extraktion aus der PDF
-            self.extracted_data = self.pdf_processor.extract_data(page_from, page_to, y_min, y_max)
+            #self.extracted_data = self.pdf_processor.extract_data(page_from, page_to, y_min, y_max)
             self.update_preview()
             messagebox.showinfo("Info", "Daten erfolgreich extrahiert!")
 
@@ -208,7 +266,7 @@ class PDFExtractorAppTk:
             logging.error(f"Fehler bei der Datenextraktion: {e}")
             messagebox.showerror("Fehler", f"Fehler bei der Datenextraktion: {e}")
 
-
+    # Exportieren als CSV durch Logik von save_as_csv Methode der Klasse FileManager
     def export_data_csv(self):
         try:
             FileManager.save_as_csv(self.extracted_data)
@@ -216,6 +274,7 @@ class PDFExtractorAppTk:
             logging.error(f"Fehler beim Exportieren als CSV: {e}")
             messagebox.showerror("Fehler", f"Fehler beim Exportieren als CSV: {e}")
 
+    # Exportieren als JSON durch Logik von save_as_json Methode der Klasse FileManager
     def export_data_json(self):
         try:
             FileManager.save_as_json(self.extracted_data)
@@ -223,6 +282,7 @@ class PDFExtractorAppTk:
             logging.error(f"Fehler beim Exportieren als JSON: {e}")
             messagebox.showerror("Fehler", f"Fehler beim Exportieren als JSON: {e}")
 
+    # Koordinatenhilfe Anzeige 
     def show_coordinates(self):
         try:
             page_from = int(self.entry_page_from.get())  # Seitenzahl aus der GUI holen
@@ -248,7 +308,22 @@ class PDFExtractorAppTk:
             # Daten in die Vorschau einfügen
             for row in self.extracted_data:
                 self.data_preview.insert("", "end", values=list(row.values()))
+    
+    def clear_previews(self, clear_layout=True):
+        """Löscht die Inhalte der Vorschau-Bereiche. Layout kann optional beibehalten werden."""
+        # Löschen Vorschau extrahierter Daten
+        for row in self.data_preview.get_children():
+            self.data_preview.delete(row)
 
+        # Layoutdaten nur löschen, wenn der Benutzer dies wünscht
+        if clear_layout:
+            self.columns_listbox.delete(0, tk.END)
+            self.layout_manager.current_layout = None  # Löschen aktuelles Layout
+
+        # Löschen der extrahierten Daten
+        self.extracted_data = []
+
+        logging.info("Die Vorschau-Bereiche wurden zurückgesetzt.")
 
 def run_app():
     root = tk.Tk()

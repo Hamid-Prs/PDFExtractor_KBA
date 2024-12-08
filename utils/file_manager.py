@@ -6,7 +6,7 @@ import logging
 # Logging konfigurieren
 logging.basicConfig(
     filename="app.log",
-    level=logging.WARNING,  # Reduziert die Menge der Logs
+    level=logging.WARNING,  
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 

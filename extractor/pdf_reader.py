@@ -4,7 +4,7 @@ import pdfplumber
 # Logging-Konfiguration
 logging.basicConfig(
     filename="app.log",
-    level=logging.WARNING,  # Verringerung der Logs
+    level=logging.WARNING,  
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 

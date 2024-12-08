@@ -27,15 +27,47 @@ class PDFProcessor:
     def add_column(self, column_name, x_min, x_max):
         """Fügt eine Spalte mit X-Koordinaten hinzu."""
         try:
-            x_min = float(x_min)
-            x_max = float(x_max)
-            if column_name and x_min < x_max:
-                self.column_layout[column_name] = (x_min, x_max)
-            else:
-                raise ValueError("Ungültige Spaltenkoordinaten.")
+            x_min = str(x_min)
+            x_max = str(x_max)
+            # Überprüfung auf leere Eingaben
+            if not x_min.strip() or not x_max.strip():
+                raise ValueError("X-Koordinaten dürfen nicht leer sein.")
+            if not column_name.strip():
+                raise ValueError("Der Spaltenname darf nicht leer sein.")
+            # Versuch, die Eingaben in Zahlen umzuwandeln
+            try:
+                x_min = float(x_min)
+                x_max = float(x_max)
+            except ValueError:
+                raise ValueError("X-Koordinaten müssen numerische Werte sein.")
+            # Validierungen
+            if column_name in self.column_layout:
+                raise ValueError(f"Der Spaltenname '{column_name}' existiert bereits. Bitte wählen Sie einen anderen Namen.")
+            if x_min < 0 or x_max < 0:
+                raise ValueError("X-Koordinaten dürfen nicht negativ sein.")
+            if x_min >= x_max:
+                raise ValueError("Ungültige Spaltenkoordinaten: X-max muss größer als X-min sein.")
+            # Spalte hinzufügen
+            self.column_layout[column_name] = (x_min, x_max)
         except ValueError as e:
             logging.error(f"Spalte konnte nicht hinzugefügt werden: {e}")
-            raise ValueError("Bitte geben Sie gültige X-Koordinaten ein.")
+            raise ValueError(f"Fehler: {e}")
+
+    """def add_column(self, column_name, x_min, x_max):
+        
+        try:
+            x_min = float(x_min)
+            x_max = float(x_max)
+            if column_name in self.column_layout:
+                raise ValueError(f"Der Spaltenname '{column_name}' existiert bereits. Bitte wählen Sie einen anderen Namen.")
+            if x_min < 0 or x_max < 0:
+                raise ValueError("X-Koordinaten dürfen nicht negativ sein.")
+            if x_min >= x_max:
+                raise ValueError("Ungültige Spaltenkoordinaten: X-max muss größer als X-min sein.")
+            self.column_layout[column_name] = (x_min, x_max)
+        except ValueError as e:
+            logging.error(f"Spalte konnte nicht hinzugefügt werden: {e}")
+            raise ValueError(f"Fehler: {e}")"""
 
     def extract_data(self, page_from, page_to, y_min, y_max):
         """Extrahiert Daten basierend auf Seiten- und Koordinatenbereichen."""
@@ -54,7 +86,6 @@ class PDFProcessor:
         if page_from < 1 or page_to < page_from:
             logging.error("Ungültiger Seitenbereich.")
             raise ValueError("Ungültiger Seitenbereich.")
-
         extracted_data = []
         for page_num in range(page_from, page_to + 1):
             words = self.reader.extract_words(page_num)
@@ -81,6 +112,7 @@ class PDFProcessor:
         """Ordnet Wörter den Spalten basierend auf X-Koordinaten zu."""
         mapped_data = []
         for _, row in sorted(rows.items()):
+            # NA steht für Not Available(kann auf NULL/None gesetzt werden)
             row_data = {col: "NA" for col in self.column_layout}
             for word in row:
                 x_center = (word['x0'] + word['x1']) / 2
@@ -129,15 +161,15 @@ class PDFProcessor:
             plt.show()
         logging.info(f"Koordinatenhilfe für Seite {page_number} angezeigt.")
 
-    def get_valid_y_range(self):
+    def get_valid_y_range(self, page_from):
         """Gibt den gültigen Y-Bereich der PDF zurück."""
         if not self.reader.pdf_path:
             raise ValueError("Keine PDF-Datei geladen.")
 
         try:
             with pdfplumber.open(self.reader.pdf_path) as pdf:
-                page = pdf.pages[0]  # فرض می‌کنیم مختصات برای همه صفحات یکسان است
-                bounds = page.bbox  # مختصات صفحه: (x0, y0, x1, y1)
+                page = pdf.pages[page_from - 1] 
+                bounds = page.bbox  # SeitenKoordinat: (x0, y0, x1, y1)
                 return bounds[1], bounds[3]  # y_min, y_max
         except Exception as e:
             raise RuntimeError(f"Fehler beim Abrufen des gültigen Y-Bereichs: {e}")

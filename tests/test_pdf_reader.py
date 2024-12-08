@@ -40,14 +40,6 @@ class TestPDFReader(unittest.TestCase):
             self.assertEqual(len(words), 1)
             self.assertEqual(words[0]["text"], "Hello")
 
-
-
-
-
-
-
-
-
     def test_extract_words_invalid_page(self):
         """Testet die Extraktion von Wörtern aus einer ungültigen Seite."""
         mock_pdf = MagicMock()
