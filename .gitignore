@@ -1,0 +1,6 @@
+# Log-Dateien ignorieren
+app.log
+logs/
+
+# Virtuelle Umgebung ignorieren
+venv/

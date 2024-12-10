@@ -1,0 +1,4 @@
+#tkinter       # Für die GUI
+pdfplumber    # Für die PDF-Verarbeitung
+pandas        # Für die Datenmanipulation und -export
+matplotlib    # Für die Visualisierung (Koordinatenhilfe)
