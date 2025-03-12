@@ -1,45 +1,40 @@
-PDFExtractor
+# PDFExtractor
 
-Automatisierte Datenextraktion aus PDF-Dokumenten des Kraftfahrt-Bundesamts (KBA) und anderen strukturell ähnlichen PDFs
+**Automatisierte Datenextraktion aus PDF-Dokumenten des Kraftfahrt-Bundesamts (KBA) und anderen strukturell ähnlichen PDFs**
 
-📌 Beschreibung
+## 📌 Beschreibung
 
-PDFExtractor ist eine Software zur automatischen Extraktion tabellarischer Daten aus PDF-Dateien. Die Anwendung wurde ursprünglich für KBA-PDFs entwickelt, kann aber auch für andere strukturell ähnliche PDFs genutzt werden, um Daten in CSV oder JSON zu konvertieren und ein benutzerdefiniertes Layout zur Extraktion zu nutzen.
+PDFExtractor ist eine Software zur **automatischen Extraktion tabellarischer Daten aus PDF-Dateien**. Die Anwendung wurde ursprünglich für KBA-PDFs entwickelt, kann aber auch für andere strukturell ähnliche PDFs genutzt werden, um **Daten in CSV oder JSON zu konvertieren** und ein benutzerdefiniertes Layout zur Extraktion zu nutzen.
 
-Hauptfunktionen
+### **Hauptfunktionen**
 
-📄 Flexible Layout-Definition: Benutzer können Spaltennamen und Koordinatenbereiche manuell anpassen und speichern.
+- 📄 **Flexible Layout-Definition:** Benutzer können Spaltennamen und Koordinatenbereiche manuell anpassen und speichern.
+- 🔍 **Effiziente Datenextraktion:** Extrahiert strukturierte Daten aus PDFs basierend auf benutzerdefinierten Layouts.
+- 📊 **Exportfunktionen:** Speichert extrahierte Daten als CSV oder JSON.
+- 🖥️ **Benutzerfreundliche GUI:** Eine intuitive Oberfläche zur schnellen Verarbeitung von PDF-Dateien.
+- 📏 **Koordinatenhilfe:** Ermöglicht das genaue Setzen der X- und Y-Koordinaten für die Extraktion.
 
-🔍 Effiziente Datenextraktion: Extrahiert strukturierte Daten aus PDFs basierend auf benutzerdefinierten Layouts.
+## 💻 Systemanforderungen
 
-📊 Exportfunktionen: Speichert extrahierte Daten als CSV oder JSON.
+**Software:**
 
-🖥️ Benutzerfreundliche GUI: Eine intuitive Oberfläche zur schnellen Verarbeitung von PDF-Dateien.
+- Betriebssystem: Windows 10 oder höher (**getestet**), macOS & Linux (**möglicherweise kompatibel**)
+- Python-Version: **3.12.8 (getestet)**
 
-📏 Koordinatenhilfe: Ermöglicht das genaue Setzen der X- und Y-Koordinaten für die Extraktion.
+Benötigte Python-Bibliotheken: `pdfplumber`, `pandas`, `matplotlib`
 
-💻 Systemanforderungen
+## 🔧 Installation
 
-Software:
+### 1️⃣ **Python installieren**
 
-Betriebssystem: Windows 10 oder höher (getestet), macOS & Linux (möglicherweise kompatibel)
+Lade [Python 3.12.8](https://www.python.org/) (getestet) herunter und installiere es. Während der Installation:
 
-Python-Version: 3.12.8 (getestet)
+- ✅ "Add Python to PATH" aktivieren.
+- ✅ "tcl/tk and IDLE" aktivieren (für GUI-Unterstützung).
 
-Benötigte Python-Bibliotheken: pdfplumber, pandas, matplotlib
+### 2️⃣ **Projekt herunterladen & virtuelle Umgebung einrichten (optional)**
 
-🔧 Installation
-
-1️⃣ Python installieren
-
-Lade Python 3.12.8 (getestet) herunter und installiere es. Während der Installation:
-
-✅ "Add Python to PATH" aktivieren.
-
-✅ "tcl/tk and IDLE" aktivieren (für GUI-Unterstützung).
-
-2️⃣ Projekt herunterladen & virtuelle Umgebung einrichten (optional)
-
+```sh
 # Repository klonen
 git clone https://github.com/Hamid-Prs/PDFExtractor_KBA.git
 cd PDFExtractor_KBA
@@ -52,31 +47,38 @@ python -m venv venv
 venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
+```
 
 Falls du keine virtuelle Umgebung nutzen möchtest, kannst du die Abhängigkeiten auch direkt installieren:
 
+```sh
 pip install -r requirements.txt
+```
 
-3️⃣ Abhängigkeiten installieren
+### 3️⃣ **Abhängigkeiten installieren**
 
+```sh
 pip install -r requirements.txt
+```
 
-4️⃣ Anwendung starten
+### 4️⃣ **Anwendung starten**
 
+```sh
 python main.py
+```
 
-🛠️ Nutzung
+## 🛠️ Nutzung
 
-🔹 Layout-Erstellung & Nutzung
+### 🔹 Layout-Erstellung & Nutzung
 
-PDFExtractor arbeitet mit benutzerdefinierten Layout-Dateien (.json), um Daten aus PDFs zu extrahieren. Diese Layouts speichern:
+PDFExtractor arbeitet mit benutzerdefinierten Layout-Dateien (`.json`), um Daten aus PDFs zu extrahieren. Diese Layouts speichern:
 
-Spaltennamen und X-Koordinaten: Jede Spalte hat einen Namen und einen horizontalen Bereich (X-Min, X-Max), um Daten korrekt zuzuordnen.
-
-Y-Koordinaten für Extraktion: y_min und y_max legen den vertikalen Bereich der Extraktion fest.
+- **Spaltennamen und X-Koordinaten:** Jede Spalte hat einen Namen und einen horizontalen Bereich (X-Min, X-Max), um Daten korrekt zuzuordnen.
+- **Y-Koordinaten für Extraktion:** `y_min` und `y_max` legen den vertikalen Bereich der Extraktion fest.
 
 Beispiel eines Layouts:
 
+```json
 {
     "columns": {
         "Hersteller-Schlüsselnummer": [33.5, 62.0],
@@ -86,33 +88,33 @@ Beispiel eines Layouts:
     "y_min": "115",
     "y_max": "570"
 }
+```
 
 Das Programm nutzt diese Koordinaten, um Daten aus der PDF genau in die richtigen Spalten und Zeilen zuzuordnen.
 
-PDF auswählen → Wähle eine PDF-Datei zur Verarbeitung aus.
+1. **PDF auswählen** → Wähle eine PDF-Datei zur Verarbeitung aus.
+2. **Seitenbereich definieren** → Lege fest, welche Seiten extrahiert werden sollen.
+3. **Layout erstellen oder laden** → Setze Spaltennamen und X/Y-Koordinaten.
+4. **Daten extrahieren** → Überprüfe die Ergebnisse in der GUI.
+5. **Daten speichern** → Exportiere als CSV oder JSON.
 
-Seitenbereich definieren → Lege fest, welche Seiten extrahiert werden sollen.
-
-Layout erstellen oder laden → Setze Spaltennamen und X/Y-Koordinaten.
-
-Daten extrahieren → Überprüfe die Ergebnisse in der GUI.
-
-Daten speichern → Exportiere als CSV oder JSON.
-
-🧪 Tests ausführen
+## 🧪 Tests ausführen
 
 Um die Tests im Projekt auszuführen, nutze den folgenden Befehl:
 
+```sh
 python -m unittest discover -s tests
+```
 
-🌍 Lizenz
+## 🌍 Lizenz
 
-Dieses Projekt steht unter der MIT-Lizenz.
+Dieses Projekt steht unter der **MIT-Lizenz**.
 
-📂 Verzeichnisstruktur
+## 📂 Verzeichnisstruktur
 
 Die folgende Verzeichnisstruktur zeigt den exakten Aufbau des Projekts:
 
+```
 PDFExtractor_KBA/
 ├── extractor/        # Modul für die PDF-Verarbeitung
 │   ├── pdf_processor.py  # Kernlogik zur PDF-Extraktion
@@ -133,11 +135,10 @@ PDFExtractor_KBA/
 ├── main.py           # Hauptprogramm
 ├── README.md         # Projektbeschreibung
 ├── requirements.txt  # Abhängigkeiten
+```
 
-🏢 Autor
+## 🏢 Autor
 
-Autor: Hamid Parsa
+- **Autor:** Hamid Parsa
+- **Projekt:** IHK-Abschlussprojekt im Bereich Anwendungsentwicklung (Winter 2024/2025)
 
-Projekt: IHK-Abschlussprojekt im Bereich Anwendungsentwicklung (Winter 2024/2025)
-
-g
